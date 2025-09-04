@@ -18,7 +18,7 @@ public class RecipeOne implements ModInitializer {
     public static final EntityType<RecipeCarEntity> CAR = ModEntities.RECIPECAR;
     @Override
     public void onInitialize() {
-        FabricDefaultAttributeRegistry.register(CAR, RecipeCarEntity.createMobAttributes());
+        //FabricDefaultAttributeRegistry.register(CAR, RecipeCarEntity.createMobAttributes());
         ModEntities.registerModEntities();
     }
 }

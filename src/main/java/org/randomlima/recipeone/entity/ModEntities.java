@@ -15,8 +15,9 @@ public class ModEntities {
     static RegistryKey<EntityType<?>> key = RegistryKey.of(RegistryKeys.ENTITY_TYPE, id);
     public static final EntityType<RecipeCarEntity> RECIPECAR = Registry.register(Registries.ENTITY_TYPE,
             id,
-            EntityType.Builder.create(RecipeCarEntity::new, SpawnGroup.CREATURE)
+            EntityType.Builder.create(RecipeCarEntity::new, SpawnGroup.MISC)
                     .dimensions(2f,1f).build(key));
+
 
 
     public static void registerModEntities() {
