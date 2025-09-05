@@ -14,6 +14,7 @@ import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import net.minecraft.client.render.entity.state.MinecartEntityRenderState;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.entity.vehicle.MinecartEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;

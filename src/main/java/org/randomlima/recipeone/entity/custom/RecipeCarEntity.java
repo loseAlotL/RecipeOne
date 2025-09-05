@@ -1,20 +1,12 @@
 package org.randomlima.recipeone.entity.custom;
 
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.entity.*;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.PassiveEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.vehicle.MinecartEntity;
 import net.minecraft.entity.vehicle.VehicleEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
@@ -22,7 +14,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import org.randomlima.recipeone.entity.ModEntities;
 
 public class RecipeCarEntity extends VehicleEntity {
 
@@ -33,14 +24,16 @@ public class RecipeCarEntity extends VehicleEntity {
         this.noClip = false;
     }
 
+    @Override
+    public void tick() {
+        super.tick();
 
-//    public static DefaultAttributeContainer.Builder createAttributes() {
-//        return MobEntity.createMobAttributes()
-//                .add(EntityAttributes.MAX_HEALTH, 18)
-//                .add(EntityAttributes.MOVEMENT_SPEED, 0.35)
-//                .add(EntityAttributes.ATTACK_DAMAGE, 1)
-//                .add(EntityAttributes.FOLLOW_RANGE, 20);
-//    }
+        if (this.getFirstPassenger() instanceof PlayerEntity player) {
+            this.setYaw(player.getYaw()); // face same way as player
+        }
+    }
+
+
 
 
     @Override
@@ -49,30 +42,49 @@ public class RecipeCarEntity extends VehicleEntity {
         return this.getPassengerList().isEmpty() && passenger instanceof PlayerEntity;
     }
 
+//    @Override
+//    protected void updatePassengerPosition(Entity passenger, PositionUpdater positionUpdater) {
+//        super.updatePassengerPosition(passenger,positionUpdater);
+//        if (this.hasPassenger(passenger)) {
+//            double offsetX = 0.0;
+//            double offsetY = 0.5; // lift them above the entity hitbox
+//            double offsetZ = 0.0;
+//
+//            positionUpdater.accept(
+//                    passenger,
+//                    this.getX() + offsetX,
+//                    this.getY() + offsetY,
+//                    this.getZ() + offsetZ
+//            );
+//        }
+//    }
     @Override
-    protected void updatePassengerPosition(Entity passenger, PositionUpdater positionUpdater) {
-        super.updatePassengerPosition(passenger, positionUpdater);
-        double offsetX = 0.0;
-        double offsetY = 0.0; // adjust for your model height
-        double offsetZ = 0.0;
-
-        passenger.setPosition(
-                this.getX() + offsetX,
-                this.getY() + offsetY,
-                this.getZ() + offsetZ
-        );
+    protected void updatePassengerPosition(Entity passenger, PositionUpdater updater) {
+        super.updatePassengerPosition(passenger, updater);
+        // Keep rider centered
+        passenger.setYaw(this.getYaw());
+        passenger.setHeadYaw(this.getYaw());
+        passenger.setBodyYaw(this.getYaw());
+        //passenger.setPosition(this.getX(), this.getY() - 0.5, this.getZ());
+    }
+    @Override
+    @Nullable
+    public LivingEntity getControllingPassenger() {
+        Entity passenger = this.getFirstPassenger();
+        return passenger instanceof LivingEntity ? (LivingEntity) passenger : null;
     }
 
     @Override
     public ActionResult interact(PlayerEntity player, Hand hand) {
+        System.out.println("interact() called: side=" + (this.getWorld().isClient() ? "CLIENT" : "SERVER"));
         if (!this.getWorld().isClient) {
-            if (!player.hasVehicle()) {
-                player.startRiding(this);
-                return ActionResult.CONSUME;
-            }
+            boolean mounted = player.startRiding(this);
+            System.out.println("Mounted result=" + mounted);
+            return mounted ? ActionResult.SUCCESS : ActionResult.PASS;
         }
-        return ActionResult.PASS;
+        return ActionResult.SUCCESS;
     }
+
 
     @Override
     public ActionResult interactAt(PlayerEntity player, Vec3d hitPos, Hand hand) {
@@ -81,6 +93,7 @@ public class RecipeCarEntity extends VehicleEntity {
             if (!player.hasVehicle()) { // Only allow if player isn't already riding
                 player.startRiding(this);
                 return ActionResult.CONSUME;
+
             }
         }
         return ActionResult.PASS;
@@ -96,6 +109,12 @@ public class RecipeCarEntity extends VehicleEntity {
     }
 
     @Override
+    public boolean canHit() {
+        return true;
+    }
+
+
+    @Override
     protected void initDataTracker(DataTracker.Builder builder) {
         super.initDataTracker(builder);
     }
@@ -105,10 +124,6 @@ public class RecipeCarEntity extends VehicleEntity {
         return null;
     }
 
-    @Override
-    public void tick(){
-        super.tick();
-    }
 
     @Override
     public boolean damage(ServerWorld world, DamageSource source, float amount) {
