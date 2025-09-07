@@ -5,10 +5,13 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.MathHelper;
+import org.randomlima.recipeone.entity.RecipeCarEntityRenderState;
 import org.randomlima.recipeone.entity.custom.RecipeCarEntity;
 
 @Environment(EnvType.CLIENT)
-public class RecipeCarEntityModel extends EntityModel<LivingEntityRenderState> { // Replace RecipeCarEntity with your entity class
+public class RecipeCarEntityModel extends EntityModel<RecipeCarEntityRenderState> { // Replace RecipeCarEntity with your entity class
     // Top-level parts
     //private final ModelPart bb_main;
     //private final ModelPart asdf; DONT USE THIS
@@ -62,9 +65,10 @@ public class RecipeCarEntityModel extends EntityModel<LivingEntityRenderState> {
     }
 
     @Override
-    public void setAngles(LivingEntityRenderState state) {
-        // animations go here, e.g.:
-        // base.yaw = state.age * 0.05F;
+    public void setAngles(RecipeCarEntityRenderState state) {
+        // Get the entity being rendered
+        body.yaw = (float)Math.toRadians(state.yaw);
+        body.pitch = (float)Math.toRadians(state.pitch);
     }
 
     public static TexturedModelData getTexturedModelData() {

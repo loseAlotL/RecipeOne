@@ -10,25 +10,16 @@ import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
 public class RecipeCarEntityRenderState extends EntityRenderState {
-    public float lerpedPitch;
-    public float lerpedYaw;
-    public long hash;
+    public float yaw;
+    public float pitch;
     public int damageWobbleSide;
     public float damageWobbleTicks;
     public float damageWobbleStrength;
-    public int blockOffset;
-    public BlockState containedBlock;
-    public boolean usesExperimentalController;
-    @Nullable
-    public Vec3d lerpedPos;
-    @Nullable
-    public Vec3d presentPos;
-    @Nullable
-    public Vec3d futurePos;
-    @Nullable
-    public Vec3d pastPos;
+    public float bubbleWobble;
+    public boolean submergedInWater;
+    public float leftPaddleAngle;
+    public float rightPaddleAngle;
 
     public RecipeCarEntityRenderState() {
-        this.containedBlock = Blocks.AIR.getDefaultState();
     }
 }
