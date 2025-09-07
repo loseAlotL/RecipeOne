@@ -72,34 +72,25 @@ public class RecipeCarEntity extends VehicleEntity {
                 float throttle = throttleGoal.getThrottle();
 
                 player.sendMessage(Text.of("[Throttle: "+throttle+"]"),true);
+                double velocity;
+                if(!getWorld().isClient())return;
                 f1Engine.update(throttle, Gear.FIRST);
                 f1Engine.printData();
+                velocity = f1Engine.getVelocity();
 
+                double radYaw = Math.toRadians(this.getYaw());
+                Vec3d forwardVec = new Vec3d(
+                        -Math.sin(radYaw),
+                        0,
+                        Math.cos(radYaw)
+                );
 
+                Vec3d motion = forwardVec.multiply(velocity);
+                this.setVelocity(motion);
+                this.move(MovementType.SELF, motion);
 
-
-//                double baseSpeed = 2.25;
-//                double radYaw = Math.toRadians(this.getYaw());
-//                Vec3d forwardVec = new Vec3d(
-//                        -Math.sin(radYaw),
-//                        0,
-//                        Math.cos(radYaw)
-//                );
-//                Vec3d velocity = forwardVec.multiply(throttle * baseSpeed);
-//
-//                this.setVelocity(velocity);
-//                this.move(MovementType.SELF, velocity);
-
-
-                // Update the engine
-//                f1Engine.update(1.0 / 20.0, player, this); // assuming 20 ticks/sec for deltaTime
-//
-//                // Apply engine-calculated velocity
-//                this.setVelocity(f1Engine.velocity);
-//                this.move(MovementType.SELF, f1Engine.velocity);
             }
         }
-
     }
 
 
