@@ -16,6 +16,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.randomlima.recipeone.Engine;
+import org.randomlima.recipeone.Gear;
 import org.randomlima.recipeone.ThrottleGoal;
 import org.randomlima.recipeone.Tyre;
 import org.randomlima.recipeone.entity.RecipeCarEntityRenderState;
@@ -71,7 +72,7 @@ public class RecipeCarEntity extends VehicleEntity {
                 float throttle = throttleGoal.getThrottle();
 
                 player.sendMessage(Text.of("[Throttle: "+throttle+"]"),true);
-                f1Engine.update(throttle);
+                f1Engine.update(throttle, Gear.FIRST);
                 f1Engine.printData();
 
 
