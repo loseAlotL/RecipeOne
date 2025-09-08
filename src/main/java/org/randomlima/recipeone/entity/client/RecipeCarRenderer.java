@@ -24,6 +24,7 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
+import org.randomlima.recipeone.GroundEngine;
 import org.randomlima.recipeone.RecipeOne;
 import org.randomlima.recipeone.entity.RecipeCarEntityRenderState;
 import org.randomlima.recipeone.entity.custom.RecipeCarEntity;
@@ -36,11 +37,11 @@ public class RecipeCarRenderer extends EntityRenderer<RecipeCarEntity, RecipeCar
     public static final EntityModelLayer LAYER =
             new EntityModelLayer(Identifier.of(RecipeOne.MOD_ID, "recipecar"), "main");
     private final RecipeCarEntityModel model;
-
+    private GroundEngine groundEngine;
     public RecipeCarRenderer(EntityRendererFactory.Context ctx) {
         super(ctx);
         this.model = new RecipeCarEntityModel(ctx.getPart(LAYER));
-
+        this.groundEngine = new GroundEngine(null);
     }
 
 
@@ -54,22 +55,27 @@ public class RecipeCarRenderer extends EntityRenderer<RecipeCarEntity, RecipeCar
         );
 
         // Optional: pitch (for slopes)
-        state.pitch = MathHelper.lerp(
-                tickProgress,
-                entity.lastPitch,
-                entity.getPitch()
-        );
+
+        groundEngine.setCar(entity);
+        groundEngine.update();
+        //state.pitch += MathHelper.lerp(tickProgress, 0, (float) groundEngine.getPitch());
+        //state.roll = MathHelper.lerp(tickProgress, 0, (float) groundEngine.getRoll());
+        float smoothing = 0.1f; // tweak 0.0-1.0 for interpolation speed
+        state.pitch += ((float) groundEngine.getPitch() - state.pitch) * smoothing;
+        state.roll += ((float) -groundEngine.getRoll() - state.roll) * smoothing;
     }
 
     @Override
     public void render(RecipeCarEntityRenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         matrices.push();
 
-
-
-        // Apply pitch and yaw from state
         matrices.multiply(new Quaternionf().rotateY((float) Math.toRadians(-state.yaw)));
-        matrices.multiply(new Quaternionf().rotateX((float) Math.toRadians(state.pitch)));
+
+        float rollFactor = -1f;
+        float pitchFactor = -1f;
+        matrices.multiply(new Quaternionf().rotateZ((float) Math.toRadians(state.roll * rollFactor)));
+        matrices.multiply(new Quaternionf().rotateX((float) Math.toRadians(state.pitch * pitchFactor)));
+
 
         matrices.multiply(new Quaternionf().rotateX((float)Math.PI));
         matrices.translate(0, -1.5, 0);

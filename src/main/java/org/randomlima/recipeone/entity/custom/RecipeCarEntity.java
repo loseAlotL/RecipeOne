@@ -1,5 +1,6 @@
 package org.randomlima.recipeone.entity.custom;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
@@ -11,36 +12,26 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import org.randomlima.recipeone.Engine;
-import org.randomlima.recipeone.Gear;
-import org.randomlima.recipeone.ThrottleGoal;
-import org.randomlima.recipeone.Tyre;
+import org.randomlima.recipeone.*;
 import org.randomlima.recipeone.entity.RecipeCarEntityRenderState;
 
 public class RecipeCarEntity extends VehicleEntity {
     private final ThrottleGoal throttleGoal;
-//    Engine f1Engine = new Engine(
-//            1000,       // hp (approx 1000 HP for modern F1 hybrid)
-//            5.0,        // aeroCoeff (simplified coefficient for downforce calculation)
-//            700,        // maxTorque in Nm
-//            5000,       // downforce at top speed (N)
-//            0.3,        // drag coefficient (simplified)
-//            798,        // mass (kg, typical F1 car weight without fuel)
-//            1.8,        // width (m)
-//            4.7,        // length (m)
-//            3.5,        // wheelBase (m)
-//            0.35,       // cmHeight (center of mass height, m)
-//            1.6,        // trackWidth (m)
-//            30000,      // suspensionStiffness (N/m, approximate)
-//            3000,       // suspensionDamping (Ns/m, approximate)
-//            50          // rollResistance (N, simplified)
-//    );
     Engine f1Engine = new Engine();
-
+    private double verticalVelocity = 0;
+    private double velocity;
+    private double kmh;
+    private Vec3d forwardVec;
+    private final GroundEngine groundEngine = new GroundEngine(this);
 
 
 
@@ -58,41 +49,89 @@ public class RecipeCarEntity extends VehicleEntity {
     public void tick() {
         super.tick();
 
-        if(this.getControllingPassenger() != null){
-            LivingEntity controller = this.getControllingPassenger();
-            if (controller instanceof PlayerEntity player) {
-                this.setYaw(player.getYaw());
-                this.setBodyYaw(player.getYaw());
-                this.setHeadYaw(player.getYaw());
-                //System.out.println("forwardspeed: "+player.forwardSpeed);
+        if (this.getControllingPassenger() instanceof PlayerEntity player) {
+            // Update car rotation to match player
+            this.setYaw(player.getYaw());
+            this.setBodyYaw(player.getYaw());
+            this.setHeadYaw(player.getYaw());
 
-                throttleGoal.setPlayer(player);  // update player ref
-                throttleGoal.updateGoal();
+            // Update throttle
+            throttleGoal.setPlayer(player);
+            throttleGoal.updateGoal();
+            float throttle = throttleGoal.getThrottle();
 
-                float throttle = throttleGoal.getThrottle();
-
-                player.sendMessage(Text.of("[Throttle: "+throttle+"]"),true);
-                double velocity;
-                if(!getWorld().isClient())return;
+            // Only run physics client-side
+            if (getWorld().isClient()) {
+                // --- Engine update ---
                 f1Engine.update(throttle, Gear.FIRST);
-                f1Engine.printData();
-                velocity = f1Engine.getVelocity();
+                velocity = f1Engine.getVelocity(); // m/s
 
+                // Display km/h
+                kmh = Math.round(velocity * 3.6 * 10.0) / 10.0;
+                player.sendMessage(Text.of("[KM/H: " + kmh + "]"), true);
+
+                double deltaT = 0.05; // 1 tick = 0.05s
                 double radYaw = Math.toRadians(this.getYaw());
-                Vec3d forwardVec = new Vec3d(
-                        -Math.sin(radYaw),
-                        0,
-                        Math.cos(radYaw)
-                );
+                forwardVec = new Vec3d(-Math.sin(radYaw), 0, Math.cos(radYaw));
 
-                Vec3d motion = forwardVec.multiply(velocity);
-                this.setVelocity(motion);
+                // --- Horizontal motion ---
+                Vec3d horizontalMotion = forwardVec.multiply(velocity * deltaT);
+
+                // --- Block climbing check (1-block obstacles) ---
+                if(blockStep(-.5) && blockStep(0) && blockStep(.5)){
+                    this.setPosition(this.getPos().offset(Direction.UP,1));
+                }
+
+                // --- Gravity ---
+                if (!this.isOnGround()) {
+                    verticalVelocity -= 9.81 * deltaT;
+                } else if (verticalVelocity < 0) {
+                    verticalVelocity = 0;
+                }
+
+                // --- Combine motion ---
+                Vec3d motion = horizontalMotion.add(0, verticalVelocity * deltaT, 0);
+
+                // --- Apply movement ---
                 this.move(MovementType.SELF, motion);
-
             }
         }
+        groundEngine.update();
+        System.out.println("Pitch: "+groundEngine.getPitch());
+        System.out.println("Roll: "+groundEngine.getRoll());
     }
+    public Vec3d getForwardVec(){
+        return forwardVec;
+    }
+    public boolean blockStep(double rightOffset){
+        boolean step = false;
 
+        Vec3d start = this.getPos().add(0, 0.1, 0);
+
+        Vec3d rightVec = new Vec3d(forwardVec.z, 0, -forwardVec.x).normalize();
+        start = start.add(rightVec.multiply(rightOffset));
+
+        Vec3d end = start.add(forwardVec.multiply(Math.max(1, kmh / 15)));
+
+        RaycastContext context = new RaycastContext(
+                start,
+                end,
+                RaycastContext.ShapeType.COLLIDER,
+                RaycastContext.FluidHandling.NONE,
+                this
+        );
+        HitResult result = this.getWorld().raycast(context);
+
+        if (result.getType() == HitResult.Type.BLOCK) {
+            BlockHitResult blockHit = (BlockHitResult) result;
+            BlockPos hitPos = blockHit.getBlockPos();
+            BlockState above = this.getWorld().getBlockState(new BlockPos(hitPos.getX(), hitPos.getY()+1, hitPos.getZ()));
+            if(above.isAir()){
+                step = true;
+            }
+        }
+        return step;
+    }
 
     @Override
     public boolean canAddPassenger(Entity passenger) {

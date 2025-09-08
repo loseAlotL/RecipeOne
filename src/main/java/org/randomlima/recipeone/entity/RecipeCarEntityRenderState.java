@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public class RecipeCarEntityRenderState extends EntityRenderState {
     public float yaw;
     public float pitch;
+    public float roll;
     public int damageWobbleSide;
     public float damageWobbleTicks;
     public float damageWobbleStrength;
