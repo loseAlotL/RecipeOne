@@ -20,7 +20,7 @@ public class RecipeOne implements ModInitializer {
     public void onInitialize() {
         //FabricDefaultAttributeRegistry.register(CAR, RecipeCarEntity.createMobAttributes());
         ModEntities.registerModEntities();
-
+        ModSounds.init();
     }
 }
 

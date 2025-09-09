@@ -1,0 +1,10 @@
+{
+  "engine_loop": {
+    "sounds": [
+      {
+        "name": "recipeone:engine",
+        "stream": true
+      }
+    ]
+  }
+}

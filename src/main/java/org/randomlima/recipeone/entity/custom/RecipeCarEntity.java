@@ -23,6 +23,8 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.randomlima.recipeone.*;
 import org.randomlima.recipeone.entity.RecipeCarEntityRenderState;
+import org.randomlima.recipeone.physics.Engine;
+import org.randomlima.recipeone.physics.GroundEngine;
 
 public class RecipeCarEntity extends VehicleEntity {
     private final ThrottleGoal throttleGoal;
@@ -32,6 +34,7 @@ public class RecipeCarEntity extends VehicleEntity {
     private double kmh;
     private Vec3d forwardVec;
     private final GroundEngine groundEngine = new GroundEngine(this);
+    private SoundEngine soundEngine;
 
 
 
@@ -59,12 +62,16 @@ public class RecipeCarEntity extends VehicleEntity {
             throttleGoal.setPlayer(player);
             throttleGoal.updateGoal();
             float throttle = throttleGoal.getThrottle();
+            float breaking = throttleGoal.getBrake();
 
             // Only run physics client-side
             if (getWorld().isClient()) {
                 // --- Engine update ---
-                f1Engine.update(throttle, Gear.FIRST);
+                f1Engine.update(throttle, breaking, Gear.FIRST);
+
                 velocity = f1Engine.getVelocity(); // m/s
+
+
 
                 // Display km/h
                 kmh = Math.round(velocity * 3.6 * 10.0) / 10.0;
@@ -78,7 +85,7 @@ public class RecipeCarEntity extends VehicleEntity {
                 Vec3d horizontalMotion = forwardVec.multiply(velocity * deltaT);
 
                 // --- Block climbing check (1-block obstacles) ---
-                if(blockStep(-.5) && blockStep(0) && blockStep(.5)){
+                if(blockStep(-.99) && blockStep(0) && blockStep(.99)){
                     this.setPosition(this.getPos().offset(Direction.UP,1));
                 }
 
