@@ -1,6 +1,7 @@
 package org.randomlima.recipeone.entity.custom;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.*;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
@@ -9,6 +10,7 @@ import net.minecraft.entity.vehicle.VehicleEntity;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -24,7 +26,9 @@ import org.jetbrains.annotations.Nullable;
 import org.randomlima.recipeone.*;
 import org.randomlima.recipeone.entity.RecipeCarEntityRenderState;
 import org.randomlima.recipeone.physics.Engine;
+import org.randomlima.recipeone.physics.EngineLoopSound;
 import org.randomlima.recipeone.physics.GroundEngine;
+import org.randomlima.recipeone.physics.SoundEngine;
 
 public class RecipeCarEntity extends VehicleEntity {
     private final ThrottleGoal throttleGoal;
@@ -34,7 +38,9 @@ public class RecipeCarEntity extends VehicleEntity {
     private double kmh;
     private Vec3d forwardVec;
     private final GroundEngine groundEngine = new GroundEngine(this);
-    private SoundEngine soundEngine;
+    private final SoundEngine soundEngine = new SoundEngine(this);
+    private EngineLoopSound engineLoopSound = new EngineLoopSound(soundEngine);
+
 
 
 
@@ -47,10 +53,13 @@ public class RecipeCarEntity extends VehicleEntity {
 
         this.throttleGoal = new ThrottleGoal(null);
     }
+    public Engine getF1Engine(){return f1Engine;}
 
     @Override
     public void tick() {
         super.tick();
+
+        //getWorld().playSound(this, BlockPos.ofFloored(this.getPos()),ModSounds.ENGINE_LOOP_1, SoundCategory.AMBIENT,1f, 1f);
 
         if (this.getControllingPassenger() instanceof PlayerEntity player) {
             // Update car rotation to match player
@@ -101,11 +110,14 @@ public class RecipeCarEntity extends VehicleEntity {
 
                 // --- Apply movement ---
                 this.move(MovementType.SELF, motion);
+
+                // -- SOUND --
+
+
             }
         }
         groundEngine.update();
-        System.out.println("Pitch: "+groundEngine.getPitch());
-        System.out.println("Roll: "+groundEngine.getRoll());
+
     }
     public Vec3d getForwardVec(){
         return forwardVec;
@@ -118,7 +130,9 @@ public class RecipeCarEntity extends VehicleEntity {
         Vec3d rightVec = new Vec3d(forwardVec.z, 0, -forwardVec.x).normalize();
         start = start.add(rightVec.multiply(rightOffset));
 
-        Vec3d end = start.add(forwardVec.multiply(Math.max(1, kmh / 15)));
+        double dist = kmh/7;
+        if(dist >=5) dist = 5;
+        Vec3d end = start.add(forwardVec.multiply(Math.max(dist, 1)));
 
         RaycastContext context = new RaycastContext(
                 start,

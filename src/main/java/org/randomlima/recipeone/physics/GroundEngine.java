@@ -1,4 +1,4 @@
-package org.randomlima.recipeone;
+package org.randomlima.recipeone.physics;
 
 import net.minecraft.block.ShapeContext;
 import net.minecraft.util.hit.BlockHitResult;
@@ -74,7 +74,6 @@ public class GroundEngine {
 
             sumY += hitY;
 
-            // Optional: store in 3x3 array
             hitYs[i / 3][i % 3] = hitY;
         }
         double avgY = sumY / points.length;

@@ -1,10 +1,50 @@
 {
-  "engine_loop": {
+  "engine_loop_1": {
+    "subtitle": "sounds.recipeone.engine_loop_1",
     "sounds": [
-      {
-        "name": "recipeone:engine",
-        "stream": true
-      }
+      "recipeone:engineloop1"
+    ]
+  },
+  "engine_loop_2": {
+    "subtitle": "sounds.recipeone.engine_loop_2",
+    "sounds": [
+      "recipeone:engineloop2"
+    ]
+  },
+  "engine_loop_3": {
+    "subtitle": "sounds.recipeone.engine_loop_3",
+    "sounds": [
+      "recipeone:engineloop3"
+    ]
+  },
+  "engine_loop_4": {
+    "subtitle": "sounds.recipeone.engine_loop_4",
+    "sounds": [
+      "recipeone:engineloop4"
+    ]
+  },
+  "engine_loop_5": {
+    "subtitle": "sounds.recipeone.engine_loop_5",
+    "sounds": [
+      "recipeone:engineloop5"
+    ]
+  },
+  "engine_loop_6": {
+    "subtitle": "sounds.recipeone.engine_loop_6",
+    "sounds": [
+      "recipeone:engineloop6"
+    ]
+  },
+  "engine_loop_7": {
+    "subtitle": "sounds.recipeone.engine_loop_7",
+    "sounds": [
+      "recipeone:engineloop7"
+    ]
+  },
+  "engine_loop_8": {
+    "subtitle": "sounds.recipeone.engine_loop_8",
+    "sounds": [
+      "recipeone:engineloop8"
     ]
   }
 }
